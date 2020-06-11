@@ -16,120 +16,137 @@
 database = {'MIT','INCART'}; % name of the databases
 
 % Loading singlechannel detections
-cd ../results/
+cd results
 load('DetectionsSinglechannel')
 
 detectionsTemp = detections;
 clear detections; % the name detections will be used again
 
-cd ../data/
+cd ..
+cd data
 
 for i = 1:length(database)
     
     % Pan and Tompkins filter-based
     % Training
     % Detection threshold vector to find the optimal threshold
-    %     beta = -1.2:0.01:1.2; % uncomment this line to find the optimal beta within a search space
+    %beta = -0.5:0.1:0.5; % uncomment this line to find the optimal beta within a search space
     %%%--- comment this part if the previous line was uncommented ----%%
-    if strcmp(database(i),'MIT') % These are the optimal values reported in the paper
-        beta = -0.125;
-    else
-        beta = 0.2;
+    if ~exist('beta','var')
+        if strcmp(database(i),'MIT') % These are the optimal values reported in the paper
+         beta = -0.125;
+        else
+      	 beta = 0.2;
+        end
     end
     %%%---------------------------------------------------------------%%
     disp(['Training PT detector in ' database{i}]);
     [performance{i}.Train.PT, coefficients{i}.PT, beta_opt{i}.PT] = multichannel_detector_training(detectionsTemp{i}.PT, database{i}, beta);
     % Test
     [performance{i}.Test.PT, detections{i}.PT] = multichannel_detector_test(detectionsTemp{i}.PT, database{i}, beta_opt{i}.PT, coefficients{i}.PT);
-    
+    clear beta
     
     % Benitez et al. Hilbert transform-based
     % Training
     % Detection threshold vector to find the optimal threshold
-    % beta = -3:0.01:1; % uncomment this line to find the optimal beta within a search space
+    %beta = -1.25:0.1:0.5; % uncomment this line to find the optimal beta within a search space
     %%%--- comment this part if the previous line was uncommented ----%%
-    if strcmp(database(i),'MIT') % These are the optimal values reported in the paper
-        beta = 0.215;
-    else
-        beta = -1.25;
+    if ~exist('beta','var')
+        if strcmp(database(i),'MIT') % These are the optimal values reported in the paper
+            beta = 0.215;
+        else
+            beta = -1.25;
+        end
     end
     %%%---------------------------------------------------------------%%
     disp(['Training HT detector in ' database{i}]);
     [performance{i}.Train.HT, coefficients{i}.HT, beta_opt{i}.HT] = multichannel_detector_training(detectionsTemp{i}.HT, database{i}, beta);
     % Test
     [performance{i}.Test.HT, detections{i}.HT] = multichannel_detector_test(detectionsTemp{i}.HT, database{i}, beta_opt{i}.HT, coefficients{i}.HT);
-    
+    clear beta
     
     % Ramakrishnan et al. dynamic plosion index-based
     % Training
     % Detection threshold vector to find the optimal threshold
-    % beta = -0.7:0.01:0.5; % uncomment this line to find the optimal beta within a search space
+    %beta = -0.7:0.1:0.5; % uncomment this line to find the optimal beta within a search space
     %%%--- comment this part if the previous line was uncommented ----%%
-    if strcmp(database(i),'MIT') % These are the optimal values reported in the paper
-        beta = -0.1;
-    else
-        beta = -0.135;
+    if ~exist('beta','var')
+        if strcmp(database(i),'MIT') % These are the optimal values reported in the paper
+            beta = -0.1;
+        else
+            beta = -0.135;
+        end
     end
+
     %%%---------------------------------------------------------------%%
     disp(['Training DPI detector in ' database{i}]);
     [performance{i}.Train.DPI, coefficients{i}.DPI, beta_opt{i}.DPI] = multichannel_detector_training(detectionsTemp{i}.DPI, database{i}, beta);
     % Test
     [performance{i}.Test.DPI, detections{i}.DPI] = multichannel_detector_test(detectionsTemp{i}.DPI, database{i}, beta_opt{i}.DPI, coefficients{i}.DPI);
-    
+    clear beta
     
     % GQRS PhysioNet's detectors
     % Training
     % Detection threshold vector to find the optimal threshold
-    % beta = -3:0.01:7; % uncomment this line to find the optimal beta within a search space
-    %%%--- comment this part if the previous line was uncommented ----%%
-    if strcmp(database(i),'MIT') % These are the optimal values reported in the paper
-        beta = 0.29;
-    else
-        beta = 2.785;
+    %beta = -1:0.1:4; % uncomment this line to find the optimal beta within a search space
+    if ~exist('beta','var')
+        if strcmp(database(i),'MIT') % These are the optimal values reported in the paper
+            beta =  0.29;
+        else
+            beta = 2.785;
+        end
     end
+
     %%%---------------------------------------------------------------%%
     disp(['Training GQRS detector in ' database{i}]);
     [performance{i}.Train.GQRS, coefficients{i}.GQRS, beta_opt{i}.GQRS] = multichannel_detector_training(detectionsTemp{i}.GQRS, database{i}, beta);
     % Test
     [performance{i}.Test.GQRS, detections{i}.GQRS] = multichannel_detector_test(detectionsTemp{i}.GQRS, database{i}, beta_opt{i}.GQRS, coefficients{i}.GQRS);
-    
+    clear beta
     
     % WQRS PhysioNet's detectors
     %  Training
     % Detection threshold vector to find the optimal threshold
-    % beta = -5:0.02:1; % uncomment this line to find the optimal beta within a search space
-    if strcmp(database(i),'MIT') % These are the optimal values reported in the paper
-        beta = -0.53;
-    else
-        beta = -0.24;
-    end
+    %beta = -2:0.1:2; % uncomment this line to find the optimal beta within a search space
+    if ~exist('beta','var')
+        if strcmp(database(i),'MIT') % These are the optimal values reported in the paper
+            beta =  -0.53;
+        else
+            beta = -0.24;
+        end
+    end    
+
     %%%---------------------------------------------------------------%%
     disp(['Training WQRS detector in ' database{i}]);
     [performance{i}.Train.WQRS, coefficients{i}.WQRS, beta_opt{i}.WQRS] = multichannel_detector_training(detectionsTemp{i}.WQRS, database{i}, beta);
     % Test
     [performance{i}.Test.WQRS, detections{i}.WQRS] = multichannel_detector_test(detectionsTemp{i}.WQRS, database{i}, beta_opt{i}.WQRS, coefficients{i}.WQRS);
-    
+    clear beta
     
     % SQRS PhysioNet's detectors
     %  Training
     % Detection threshold vector to find the optimal threshold
-    % beta = -5:0.02:2; % uncomment this line to find the optimal beta within a search space
-    if strcmp(database(i),'MIT') % These are the optimal values reported in the paper
-        beta = 0.49;
-    else
-        beta = 1.02;
-    end
+    %beta = -2:0.1:2; % uncomment this line to find the optimal beta within a search space
+    if ~exist('beta','var')
+        if strcmp(database(i),'MIT') % These are the optimal values reported in the paper
+            beta =  0.49;
+        else
+            beta = 1.02;
+        end
+    end   
+
     %%%---------------------------------------------------------------%%
     disp(['Training SQRS detector in ' database{i}]);
     [performance{i}.Train.SQRS, coefficients{i}.SQRS, beta_opt{i}.SQRS] = multichannel_detector_training(detectionsTemp{i}.SQRS, database{i}, beta);
     % Test
     [performance{i}.Test.SQRS, detections{i}.SQRS] = multichannel_detector_test(detectionsTemp{i}.SQRS, database{i}, beta_opt{i}.SQRS, coefficients{i}.SQRS);
-    
+    clear beta
     
 end
 
 % Saving variables of interest
-cd ../results/
+cd ..
+cd results
 % Save multichannel QRS complex detections (QRS complex localization)
 save('DetectionsMultichannel','detections');
 % Save multichannel QRS complex detection performance

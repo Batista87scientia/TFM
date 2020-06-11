@@ -64,15 +64,30 @@ for i = 1 : L
         % record were used to evaluate the detection performance. Also, a
         % beat-by-beat comparison was performed using MATLAB wrapper
         % function bxb.
+        [isloaded,WfdbConfig]=wfdbloadlib;
+        BxbCmd = [WfdbConfig.WFDB_NATIVE_BIN, 'bin', filesep, 'bxb.exe', ' -r ', record_id, ' -a ', 'atr', ' ', 'atr', ' -S ', ['bxbReport' record_id '.txt']];
+        [status,result] = system(BxbCmd);
+        fid = fopen(['bxbReport' record_id '.txt'],'r');
+        A=fscanf(fid,'%c');
+        fclose(fid);
+        splitstring = regexp(A,'\n','split');
+        report=zeros(8,7);
+        y=0;
+        for z=8:14
+          y=y+1;
+          values=regexp(splitstring(z),'\d*\S','match');
+          values=values{1,1};
+          array=str2double(values);
+          for x=3:length(array)
+              report(y,x-2)=array(x);
+          end
+        end
+        delete(['bxbReport' record_id '.txt']); % Deleting the file
         cd ..
-        % Reading the annotation provided in the database (do not use rdann
-        % because the number obtained is incorrect)
-        report=bxb([database '/' record_id],'atr','atr',['bxbReport' record_id '.txt'],'300',[],matchWindow);
-        delete(['bxbReport' record_id '.txt']);
         
         % Measures
         tp =0; % True positive
-        fn =sum(sum(report.data(1:5,1:5)))+sum(report.data(1:5,6)); % False negative
+        fn =sum(sum(report(1:5,1:5)))+sum(report(1:5,6)); % False negative
         fp =0; % False positive
         
     else
@@ -90,14 +105,32 @@ for i = 1 : L
         % record were used to evaluate the detection performance. Also, a
         % beat-by-beat comparison was performed using MATLAB wrapper
         % function bxb.
+        [isloaded,WfdbConfig]=wfdbloadlib;
+        BxbCmd = [WfdbConfig.WFDB_NATIVE_BIN, 'bin', filesep, 'bxb.exe', ' -r ', record_id, ' -a ', 'atr', ' ', 'test', ' -S ', ['bxbReport' record_id '.txt']];
+        [status,result] = system(BxbCmd);
+        fid = fopen(['bxbReport' record_id '.txt'],'r');
+        A=fscanf(fid,'%c');
+        fclose(fid);
+        splitstring = regexp(A,'\n','split');
+        report=zeros(8,7);
+        y=0;
+        for z=8:14
+          y=y+1;
+          values=regexp(splitstring(z),'\d*\S','match');
+          values=values{1,1};
+          array=str2double(values);
+          for x=3:length(array)
+              report(y,x-2)=array(x);
+          end
+        end
+        delete(['bxbReport' record_id '.txt']); % Deleting the file
         cd ..
-        report=bxb([database '/' record_id],'atr','test',['bxbReport' record_id '.txt'],'300',[],matchWindow);
-        delete(['bxbReport' record_id '.txt']);
+                       
         
         % Measures
-        tp =sum(sum(report.data(1:5,1:5))); % True positive
-        fn =sum(report.data(1:5,6)); % False negative
-        fp =sum(report.data(6:end,1)); % False positive
+        tp =sum(sum(report(1:5,1:5))); % True positive
+        fn =sum(report(1:5,6)); % False negative
+        fp =sum(report(6:end,1)); % False positive
     end
     
     % Performance metrics

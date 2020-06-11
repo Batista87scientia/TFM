@@ -11,11 +11,17 @@
 % Date: March 2018
 % Email: miguelaltuve@gmail.com
 % Last updated: May 2018
+% Modified for Windows: Rafael Batista
+% Date: May 2020
 
 
-cd ../data/
+
+cd ./data
 
 database = {'MIT', 'INCART'}; % name of the databases
+
+%%
+
 
 for i = 1 : length(database)
     
@@ -47,17 +53,23 @@ for i = 1 : length(database)
     
 end
 
+
+
+
+%%
 % Saving variables of interest
-cd ../results/
+cd ..
+cd results
 % Save singlechannel QRS complex detections (QRS complex localization)
 save('DetectionsSinglechannel','detections');
 % Save singlechannel QRS complex detection performance
 save('PerformanceSinglechannel','performance');
+cd ..
 
-
+%%
 %============ Function singlechannel_detection_performance================
 function [performance, detections] = singlechannel_detection_performance(DetectorName, database)
-
+det=0
 % Initialization of variables
 switch database    
     case 'MIT'
@@ -87,6 +99,8 @@ for j = 1 : N
     
     for i = 1 : L % Perform detection on every record 
         
+        
+        
         record_id=records(i).name(1:3); % name of record
         [signal,fs,~]= rdsamp(record_id); % Reading record
         
@@ -103,6 +117,7 @@ for j = 1 : N
                 
                 case 'PT' % Pan and Tompkins filter-based
                     disp(['Evaluating PT detector in ' database ' ECG channel ' num2str(j) ', Record ' num2str(i) ', Remaining ' num2str(L-i) ' records']);
+                    det_old=det;
                     [~,det] = pan_tompkin(signal(:,j+m),fs);
                     
                 case 'HT' % Benitez et al. Hilbert transform-based
@@ -171,19 +186,38 @@ for j = 1 : N
             % the QRS complex detector was evaluated from minute 5 of each
             % record (300 s). Also, a beat-by-beat comparison was performed
             % using MATLAB wrapper function bxb    
-            cd ..
             % Reading the annotation provided in the database (do not use
             % rdann because the number obtained is incorrect) 
-            report=bxb([database '/' record_id],'atr','atr',['bxbReport' record_id '.txt'],'300',[],matchWindow);
+            
+            [isloaded,WfdbConfig]=wfdbloadlib;
+            BxbCmd = [WfdbConfig.WFDB_NATIVE_BIN, 'bin', filesep, 'bxb.exe', ' -r ', record_id, ' -a ', 'atr', ' ', 'atr', ' -S ', ['bxbReport' record_id '.txt']];
+            [status,result] = system(BxbCmd);
+            fid = fopen(['bxbReport' record_id '.txt'],'r');
+            A=fscanf(fid,'%c');
+            fclose(fid);
+            splitstring = regexp(A,'\n','split');
+            report=zeros(8,7);
+            y=0;
+            for z=8:14
+              y=y+1;
+              values=regexp(splitstring(z),'\d*\S','match');
+              values=values{1,1};
+              array=str2double(values);
+              for x=3:length(array)
+                  report(y,x-2)=array(x);
+              end
+            end
             delete(['bxbReport' record_id '.txt']); % Deleting the file
+            cd ..
             
             % Measures
             tp =0; % True positive
-            fn =sum(sum(report.data(1:5,1:5))) +sum(report.data(1:5,6)); % False negative
+            fn =sum(sum(report(1:5,1:5))) +sum(report.data(1:5,6)); % False negative
             fp =0; % False positive
             
         else
             
+           
             det(det<1)=[]; % In case there are negative detections
             det = det(:); % Convert the vector into a column vector
             
@@ -197,15 +231,35 @@ for j = 1 : N
             % As recommended by the ANSI/AAMI EC38:1998, the performance of
             % the QRS complex detector was evaluated from minute 5 of each
             % record (300 s). Also, a beat-by-beat comparison was performed
-            % using MATLAB wrapper function bxb   
-            cd ..
-            report=bxb([database '/' record_id],'atr','test',['bxbReport' record_id '.txt'],'300',[],matchWindow);
-            delete(['bxbReport' record_id '.txt']); % Deleting the file
+            % using MATLAB wrapper function bxb 
             
+            % Reading the annotation provided in the database (do not use
+            % rdann because the number obtained is incorrect)     
+            
+            [isloaded,WfdbConfig]=wfdbloadlib;
+            BxbCmd = [WfdbConfig.WFDB_NATIVE_BIN, 'bin', filesep, 'bxb.exe', ' -r ', record_id, ' -a ', 'atr', ' ', 'test', ' -S ', ['bxbReport' record_id '.txt']];
+            [status,result] = system(BxbCmd);
+            fid = fopen(['bxbReport' record_id '.txt'],'r');
+            A=fscanf(fid,'%c');
+            fclose(fid);
+            splitstring = regexp(A,'\n','split');
+            report=zeros(8,7);
+            y=0;
+            for z=8:14
+              y=y+1;
+              values=regexp(splitstring(z),'\d*\S','match');
+              values=values{1,1};
+              array=str2double(values);
+              for x=3:length(array)
+                  report(y,x-2)=array(x);
+              end
+            end
+            delete(['bxbReport' record_id '.txt']); % Deleting the file
+            cd ..
             % Measures
-            tp =sum(sum(report.data(1:5,1:5))); % True positive
-            fn =sum(report.data(1:5,6)); % False negative
-            fp =sum(report.data(6:end,1)); % False positive
+            tp =sum(sum(report(1:5,1:5))); % True positive
+            fn =sum(report(1:5,6)); % False negative
+            fp =sum(report(6:end,1)); % False positive
             
         end
         
